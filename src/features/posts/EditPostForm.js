@@ -1,22 +1,26 @@
 import React, { useState } from 'react'
 import { useHistory } from 'react-router-dom'
-import { useDispatch, useSelector } from 'react-redux'
-import { postUpdated, selectPostById } from './postsSlice'
+import { useEditPostMutation, useGetPostQuery } from '../api/apiSlice'
 
 export const EditPostForm = ({ match }) => {
   const { postId } = match.params
-  const post = useSelector((state) => selectPostById(state, postId))
+  const { data: post } = useGetPostQuery(postId)
   const [title, setTitle] = useState(post.title)
   const [content, setContent] = useState(post.title)
-  const dispatch = useDispatch()
+  const [updatePost, { isLoading }] = useEditPostMutation()
   const history = useHistory()
 
   const onTitleChanged = (e) => setTitle(e.target.value)
   const onContentChanged = (e) => setContent(e.target.value)
-  const onSavePostClicked = () => {
-    dispatch(postUpdated(postId, title, content))
-    history.push(`/posts/${postId}`)
+
+  const canSave = [title, content].every(Boolean) && !isLoading
+  const onSavePostClicked = async () => {
+    if (canSave) {
+      await updatePost({ id: postId, title, content })
+      history.push(`/posts/${postId}`)
+    }
   }
+
   return (
     <section>
       <h2>Edit Post</h2>
@@ -38,7 +42,7 @@ export const EditPostForm = ({ match }) => {
           onChange={onContentChanged}
         />
       </form>
-      <button type="button" onClick={onSavePostClicked}>
+      <button type="button" onClick={onSavePostClicked} disabled={!canSave}>
         Save Post
       </button>
     </section>
