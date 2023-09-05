@@ -1,26 +1,33 @@
-import React from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { Link } from 'react-router-dom'
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import {
-  fetchNotifications,
-  selectAllNotifications,
-} from '../features/notifications/notificationSlice'
+  fetchNotificationsWS,
+  selectNotificationsMetadata,
+  useGetNotificationsQuery,
+} from '../features/notifications/notificationSlice';
 
 export const Navbar = () => {
-  const dispatch = useDispatch()
-  const numUnreadNotifications = useSelector(selectAllNotifications).filter(
+  const dispatch = useDispatch();
+
+  // Trigger initial fetch of notifications and keep the websocket open to receive updates
+  useGetNotificationsQuery();
+
+  const notificationsMetadata = useSelector(selectNotificationsMetadata);
+  const numUnreadNotifications = notificationsMetadata.filter(
     (n) => !n.read
-  ).length
+  ).length;
 
   const fetchNewNotifications = () => {
-    dispatch(fetchNotifications())
-  }
-  let unreadNotificationsBadge
+    dispatch(fetchNotificationsWS());
+  };
+
+  let unreadNotificationsBadge;
 
   if (numUnreadNotifications > 0) {
     unreadNotificationsBadge = (
       <span className="badge">{numUnreadNotifications}</span>
-    )
+    );
   }
 
   return (
@@ -42,5 +49,5 @@ export const Navbar = () => {
         </div>
       </section>
     </nav>
-  )
-}
+  );
+};
